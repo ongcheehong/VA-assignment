@@ -1,22 +1,5 @@
 [
   {
-    "path": "posts/welcome/",
-    "title": "Welcome to VA assignment",
-    "description": "Welcome to our new blog, VA assignment. We hope you enjoy \nreading what we have to say!",
-    "author": [
-      {
-        "name": "Nora Jones",
-        "url": "https://example.com/norajones"
-      }
-    ],
-    "date": "2021-07-28",
-    "categories": [],
-    "contents": "\r\n\r\n\r\n\r\n",
-    "preview": {},
-    "last_modified": "2021-07-28T13:24:30+08:00",
-    "input_file": {}
-  },
-  {
     "path": "posts/2021-07-28-vast-challenge-assignment-part-3/",
     "title": "Vast Challenge Assignment Part 3",
     "description": "Welcome to Ong Chee Hong's Vast Challenge 2021 Assignment.",
@@ -117,5 +100,22 @@
     "preview": {},
     "last_modified": "2021-07-28T21:44:01+08:00",
     "input_file": "vast-challenge-assignment-part-1.knit.md"
+  },
+  {
+    "path": "posts/welcome/",
+    "title": "Welcome to VA assignment",
+    "description": "A Welcome to Ong Chee Hong's Vast Challenge 2021 Assignment.",
+    "author": [
+      {
+        "name": "Ong Chee Hong",
+        "url": "https://www.linkedin.com/in/alexongch/"
+      }
+    ],
+    "date": "2021-07-28",
+    "categories": [],
+    "contents": "\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2021-07-28T21:46:04+08:00",
+    "input_file": "welcome.knit.md"
   }
 ]
