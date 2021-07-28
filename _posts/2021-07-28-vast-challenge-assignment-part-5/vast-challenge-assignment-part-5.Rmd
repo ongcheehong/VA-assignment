@@ -119,3 +119,276 @@ cc_loyalty_join <- cc_dtsplit %>%
 
 cc_loyalty_join
 ```
+
+```{r}
+car_cc <- data.frame("CarID" = c(1,1,1,2,3,4,4,5,5,6,7,8,8,9,10,10,11,12,13,13,13,14,14,14,15,15,16,16,17,18,18,18,18,19,21,22,22,
+                                 25,25,25,26,26,27,29,29,29,30,30,30,30,31,33,34,35,101,101,104,105,106,106,107),"last4ccnum" = c(7108,9551,2681,1415,9635,8156,7688,6899,7117,7253,2540,5368,5368,1877,8332,8332,1321,7108,5407,8202,6691,7889,7889,1874,3853,8129,4795,4795,
+  7384,9617,7354,4434,7792,6895,9405,1286,1286,6816,2418,2142,7819,1310,3492, 3547,5921,5921,8411,4948,4948,6901,5010,9683,3484,2463,9220,9220,8642,9152,2276,3506,4530), "loyaltynum" = c("L6544","L5777","L1107","L7783","L3191","L5224","L4164", "L6267","L6417","L1682","L5947", "L2247","L6119","L3014","L2070","L8566","L4149","L6544","L4034","L2343","L6267","L6119","L2247","L4424","L1485","L8328","L8566","L2070","L3800","L5553","L9254","L2169","L5756","L3366","L3259","L3288","L3572","L8148","L9018","L9637","L5259","L8012","L7814","L9362","L3295","L9406","L6110","L9406","L3295","L9363","L2459","L7291","L2490","L6886","L4063","L7761","L2769","L5485","L3317","L7761","L8477"))
+
+
+car_cc$last4ccnum <- as.factor(car_cc$last4ccnum)
+car_cc$loyaltynum <- as.factor(car_cc$loyaltynum)
+
+car_cc
+```
+
+
+# 4.4. Given the data sources provided, identify potential informal or unofficial relationships among GASTech personnel. Provide evidence for these relationships. Please limit your response to 8 images and 500 words.
+
+Network analysis is used to detect relationship between people of interests.
+
+To start our journey of network analysis. We will first fulljoin the dataset of cc_loyalty_join to car_cc. The full join will indicates an NA  that does not have any data on the other dataset.On the below tibble, we will be able to note that there are CarIDs that have NA. The reason being those are likely truck drivers in which the car_cc dataset do not have any indicative value for that.
+
+
+```{r}
+car_cc_join <- cc_loyalty_join %>%
+  full_join(car_cc, by = c("last4ccnum" , "loyaltynum"))
+
+car_cc_join
+```
+
+We will take a look at those CarID with NA values. There are a total of some of the rows that the CarID cant be inferred.
+
+
+```{r}
+car_cc_na <- cc_loyalty_join %>%
+  full_join(car_cc, by = c("last4ccnum" , "loyaltynum")) %>%
+  filter(is.na(CarID))
+
+car_cc_na
+
+```
+
+
+We will drop those NA data that cant be inferred. We have atotal of 1073 rows in our joined dataset.
+
+
+```{r}
+car_cc_dropna <- car_cc_join %>%
+  drop_na(CarID) 
+
+car_cc_dropna$CarID = as.factor(car_cc_dropna$CarID)
+
+car_cc_dropna 
+```
+
+Next, we will select out those data from the car assignment dataset that we are required for our network analysis study.
+
+
+```{r}
+car_unite_select <- car_unite %>%
+  select(name, CarID, CurrentEmploymentType, CurrentEmploymentTitle)
+
+car_unite_select
+```
+
+We will next join the car_cc dataset with the car assignment dataset. Notice that there is a reduction in number of rows, those rows that are taken out are trucks which does not have any CarID.
+
+
+```{r}
+carassgn_car_cc_join <- car_cc_dropna %>%
+  inner_join(car_unite_select, by = c("CarID"))
+
+carassgn_car_cc_join
+
+```
+
+How do we find out the relationship between a person to another. Normally, when friends went out together to have lunch, they will pay separetely on the spot. This is indicative of a close relationship. For our study, we will cut the transaction time in breaks of 5 mins to try and sieve out those similar transactions that might be indicative of a close relationship between people.
+
+To do that, we will need to cut the timestamp by 5mins break as shown below. You will notice that a new row time_5 is created and break by 5 mins.
+
+
+
+```{r}
+ccassgn_5min <- carassgn_car_cc_join  %>%
+  mutate(time_5 = cut(timestamp, breaks="5 min"))
+
+ccassgn_5min
+
+```
+
+Next, we will filter out those columns that are required for our network analysis study.
+
+```{r}
+ccassgn_5min_select <- ccassgn_5min %>%
+  select(CarID,time_5,location,name,day)
+
+ccassgn_5min_select
+
+```
+
+Next, we will join the same table with each other to examine any close relationship between each other. Notice that there are CarID_1 and CarID_2. As there should not be two CarID that are the same with each other. We will take it out on the next code chunk.
+
+
+
+
+```{r}
+car_location_edges <- ccassgn_5min_select %>%
+  inner_join(ccassgn_5min_select, by = c("time_5","location","day"), suffix = c("_1","_2"))
+
+car_location_edges
+
+
+```
+
+Next, we will group the two carids together with the time, location and day to find out those carids that goes to the same place around the same time. 
+
+
+```{r}
+car_location_edges_aggregated <- car_location_edges %>%
+  group_by(CarID_1, CarID_2, time_5, location, day) %>%
+  summarise(Weight = n()) %>%
+  filter(CarID_1 != CarID_2) %>%
+  ungroup()
+
+
+car_location_edges_aggregated
+
+
+```
+
+Next, we will drop those truck values which are NA from the car assignment dataset to prevent any error from forming during the network analysis.
+
+
+```{r}
+car_nodes_with_truck <- car_unite %>%
+  select(CarID, name,CurrentEmploymentType,CurrentEmploymentTitle)
+
+car_nodes <- car_nodes_with_truck %>%
+  drop_na(CarID)
+
+car_nodes
+
+```
+
+Next, a tbl_grpah is used to manipulate tidygraph. This is use to prepare for network analysis by indicating the nodes and edges.
+
+
+```{r}
+car_location_graph <- tbl_graph(nodes = car_nodes,
+                                edges = car_location_edges_aggregated,
+                                directed = TRUE)
+
+car_location_graph
+```
+Next, we will create a facet grid of each employment type to see their relationship. If we notice, the executive does not have any links in between which indicates that their relationship is not that close as compared to engineering and security.
+
+
+```{r}
+set_graph_style()
+g <- ggraph(car_location_graph,
+layout =
+"nicely") +
+geom_edge_link(aes(width=Weight),
+alpha=
+0.2) +
+scale_edge_width(range = c(0.1,5)) +
+geom_node_point(aes(colour = CurrentEmploymentType),
+size =2)
+g + facet_nodes(~CurrentEmploymentType)+
+th_foreground(foreground ="grey80",
+border =TRUE) +
+theme(legend.position ='bottom')
+
+
+
+```
+
+Next, we will conduct a betweeness centrality for our network analysis. We can see that security and engineering has bigger circle which indicates that they are in between many other nodes which shows that they are close to others.
+
+
+```{r}
+g <- car_location_graph %>%
+mutate(betweenness_centrality = centrality_betweenness()) %>%
+ggraph(layout =
+"fr"
+) +
+geom_edge_link(aes(width=Weight),
+alpha=
+0.2
+) +
+scale_edge_width(range = c(0.1,5)) +
+geom_node_point(aes(colour = CurrentEmploymentType,
+size=betweenness_centrality))
+g + theme_graph()
+
+
+```
+
+Next, we will visualize any possible community. A size of more than 1 indicates a community between groups of people. If we are able to see, those with size more than 1 are of the engineering department which shows that they have closely link with one another.
+
+
+```{r}
+g <- car_location_graph %>%
+mutate(community = as.factor(group_edge_betweenness(weights = Weight, directed =
+TRUE
+))) %>%
+ggraph(layout =
+"fr"
+) +
+geom_edge_link(aes(width=Weight),
+alpha=
+0.2
+) +
+scale_edge_width(range = c(
+0.1
+,
+5
+)) +
+geom_node_point(aes(colour = community))
+g + theme_graph()
+
+
+```
+
+Next, we will prepare for the interactive network analysis using visNetwork.
+
+First, we will rename the CarID to id and current employment type to group which is required for visNetwork.
+
+
+
+
+```{r}
+car_nodes_rename <- car_nodes%>%
+  rename(id = CarID, group = CurrentEmploymentType)
+  
+
+
+```
+
+
+Next we will conduct the data preparation for visNetwork
+
+
+```{r}
+car_location_edges_aggregated_vis <- car_location_edges %>%
+left_join(car_nodes_rename, by = c("name_1"="name")) %>%
+rename(from = id) %>%
+left_join(car_nodes_rename, by = c("name_2"="name")) %>%
+rename(to = id) %>%
+group_by(from,to) %>%
+summarise(weight = n()) %>%
+filter(weight >1) %>%
+ungroup()
+```
+
+Next, we will create the visNetwork network analysis. Notice that the visNetwork is interactive whereby the CarID can be chosen to see the relationship between each CarID.
+
+
+```{r}
+visNetwork(car_nodes_rename,
+car_location_edges_aggregated_vis) %>%
+visIgraphLayout(layout =
+"layout_with_fr"
+) %>%
+visOptions(highlightNearest =
+TRUE
+,
+nodesIdSelection =
+TRUE
+) %>%
+visLegend() %>%
+visLayout(randomSeed =
+123
+)
+```
