@@ -253,4 +253,81 @@ tm_lines(col = "CarID",palette="-RdYlBu") +
 
 ```
 
+Next, we will show how to infer the CarID to the cc dataset.The process is as follows:
+
+First, we will output the cc_loyalty_join dataset which is the joined cc and loyalty dataset. Next, we will filter to a random date such as 2014-01-10 as shown below. Taking reference to the location *Ouzeri Elian*. We can see that there are 6 instances on day 10.
+
+
+
+```{r}
+cc_loyalty_join %>%
+  filter(date == "2014-01-10") %>%
+  arrange(location) 
+
+```
+
+
+Now, we will head back to the map to record down all the CarID that was present at Ouzeri Elian. Notice that there were 6 CarIDs, 1,5,9,15,18,21. Note! 1) Not always will there be the same amount of CarIDs as the cc_loyalty_join dataset. However, the modality is still the same which is to record down all the CarIDs. 2) the lines might not always stop at the location itself which is the same as Ouzeri Elian as shown below. A tip is to find places there have a "U-turn" in which indicates the person stop at the place and left after that.
+
+![](img/uturn.png)
+
+
+
+Next, we will filter the cc_loyalty_join dataset by the last4ccnum of the 6 CarIDs. For our example, we will use 1877. Notice that last4ccnum 1877 went to Bean there done that.
+
+```{r}
+cc_loyalty_join %>%
+  filter(last4ccnum== 1877, date == "2014-01-10") %>%
+  arrange(location) 
+
+```
+
+Now, we will head back to the map and hover our mouse to Bean there done that, we should be able to see CarID 9 pops up. The rest of the CarIDs do not match any of the CarIDs at Ouzeri Elian. As such CarID 9 corresponds to last4ccnum of 1877 and loyatlynum L3014.
+
+![](img/Ouzeri Elian.png)
+
+
+This examination of both data sources does not always work as there are some discrepancies and limitation in using the map data such as the 1) the location is not accurate to the said location like Ouzeri Elian. 2) If on the day, the particular user went to only one place, however, there are a lot of CarIDs at the same location which will makes it difficult to detect the CarID. 3) There are places like Hippokampos which is not indicated in the map. 
+
+Most of the above limitations and discrepancies can be resolve by trial and error on other days. Another tip is to create another map and filter by day and CarID to clearly see the movement of the car and whether does is match the cc dataset. However, there are still some CarIDs that are not able to be infered due to lack of good information or false information provided.
+
+```{r}
+gps_path_selected <- gps_path_revised %>%
+filter(CarID ==9, day == 10)
+gps_path_selected
+tmap_mode("view")
+tm_shape(map) +
+tm_rgb(map, r = 1,g = 2,b = 3,
+alpha = NA,
+saturation = 1,
+interpolate = TRUE,
+max.value = 255) +
+tm_shape(gps_path_selected) +
+tm_lines(col = "CarID",palette="-RdYlBu") +
+  tm_text(text = "CarID") +
+  tm_layout (title = "Map of car movements") 
+
+
+
+```
+
+### Tagging CarID to cc and loyalty dataset
+
+Below is a dataframe that has been created to tag the CarID to the cc and loyalty datasets.
+
+Notice that there are some user with multiple cc.
+
+Those CarIDs that are not able to inferred are 20,23,24,28,32,102 & 103. Note that 102 and 103 are not tag with any cc dataset because there is no movement data provided for these two vehicles.
+
+```{r}
+car_cc <- data.frame("CarID" = c(1,1,1,2,3,4,4,5,5,6,7,8,8,9,10,10,11,12,13,13,13,14,14,14,15,15,16,16,17,18,18,18,18,19,21,22,22,
+                                 25,25,25,26,26,27,29,29,29,30,30,30,30,31,33,34,35,101,101,104,105,106,106,107),"last4ccnum" = c(7108,9551,2681,1415,9635,8156,7688,6899,7117,7253,2540,5368,5368,1877,8332,8332,1321,7108,5407,8202,6691,7889,7889,1874,3853,8129,4795,4795,
+  7384,9617,7354,4434,7792,6895,9405,1286,1286,6816,2418,2142,7819,1310,3492, 3547,5921,5921,8411,4948,4948,6901,5010,9683,3484,2463,9220,9220,8642,9152,2276,3506,4530), "loyaltynum" = c("L6544","L5777","L1107","L7783","L3191","L5224","L4164", "L6267","L6417","L1682","L5947", "L2247","L6119","L3014","L2070","L8566","L4149","L6544","L4034","L2343","L6267","L6119","L2247","L4424","L1485","L8328","L8566","L2070","L3800","L5553","L9254","L2169","L5756","L3366","L3259","L3288","L3572","L8148","L9018","L9637","L5259","L8012","L7814","L9362","L3295","L9406","L6110","L9406","L3295","L9363","L2459","L7291","L2490","L6886","L4063","L7761","L2769","L5485","L3317","L7761","L8477"))
+
+
+car_cc$last4ccnum <- as.factor(car_cc$last4ccnum)
+car_cc$loyaltynum <- as.factor(car_cc$loyaltynum)
+
+car_cc
+```
 
