@@ -49,5 +49,22 @@
     "preview": {},
     "last_modified": "2021-07-28T20:51:12+08:00",
     "input_file": "vast-challenge-assignment-part-2.knit.md"
+  },
+  {
+    "path": "posts/2021-07-28-vast-challenge-assignment-part-3/",
+    "title": "Vast Challenge Assignment Part 3",
+    "description": "Welcome to Ong Chee Hong's Vast Challenge 2021 Assignment.",
+    "author": [
+      {
+        "name": "Ong Chee Hong",
+        "url": "https://www.linkedin.com/in/alexongch/"
+      }
+    ],
+    "date": "2021-07-28",
+    "categories": [],
+    "contents": "\r\nData Preparation for Question 4.2\r\n\r\n\r\npackages = c('DT','ggiraph','plotly','tidyverse', 'raster','sf','clock','tmap',\r\n             'rgdal','dplyr', 'tidyr', 'textclean', \"plotly\", \"forcats\", \"jpeg\", \"tiff\",\r\n             \"mapview\",\"tidygraph\",\"igraph\",\"ggraph\",\"visNetwork\",\"lubridate\")\r\nfor(p in packages){\r\n  if(!require(p,character.only = T)){\r\n    install.packages(p)\r\n  }\r\n  library(p,character.only = T)\r\n}\r\n\r\n\r\n\r\n\r\n\r\ncar <- read_csv(\"data/mc2/car-assignments.csv\")\r\ncc <- read_csv(\"data/mc2/cc_data.csv\", locale = locale(encoding = \"ASCII\"))\r\ngps <- read_csv(\"data/mc2/gps.csv\")\r\nloyalty <- read_csv(\"data/mc2/loyalty_data.csv\",locale = locale(encoding = \"ASCII\"))\r\n\r\n\r\n\r\n\r\n\r\ncar$CarID = as.factor(car$CarID)\r\ngps$id = as.factor(gps$id)\r\n\r\n\r\n\r\n\r\n\r\ncar_unite <- car %>%\r\n  unite(col = \"name\", LastName,FirstName, sep = \", \",  remove =FALSE) \r\n\r\n\r\n\r\n\r\n\r\ngps_cleaned <- rename(gps,CarID = id)\r\n\r\ngps_cleaned$Timestamp <- date_time_parse(gps_cleaned$Timestamp,\r\n                                 zone = \"\",\r\n                                 format = \"%m/%d/%Y %H:%M\")\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2021-07-28T20:56:56+08:00",
+    "input_file": "vast-challenge-assignment-part-3.knit.md"
   }
 ]
