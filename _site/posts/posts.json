@@ -100,5 +100,22 @@
     "preview": "posts/2021-07-28-vast-challenge-assignment-part-5/vast-challenge-assignment-part-5_files/figure-html5/unnamed-chunk-27-1.png",
     "last_modified": "2021-07-28T21:27:49+08:00",
     "input_file": "vast-challenge-assignment-part-5.knit.md"
+  },
+  {
+    "path": "posts/2021-07-28-vast-challenge-assignment-part-6/",
+    "title": "Vast Challenge Assignment Part 6",
+    "description": "Welcome to Ong Chee Hong's Vast Challenge 2021 Assignment.",
+    "author": [
+      {
+        "name": "Ong Chee Hong",
+        "url": "https://www.linkedin.com/in/alexongch/"
+      }
+    ],
+    "date": "2021-07-28",
+    "categories": [],
+    "contents": "\r\n4.5. Do you see evidence of suspicious activity? Identify 1- 10 locations where you believe the suspicious activity is occurring, and why Please limit your response to 10 images and 500 words.\r\n4.5.1 Day 11, CarID 26 visited a house at Canero street.\r\nMost of the days, only CarIDs 2, 3 & 11 will be visit this house which presumably is their residence. However on day 11, CarID 26 went to the house.\r\n\r\nBased on the network analysis, CarID 26 has no close relationship with CarIDs 2,3 & 11. So it is suspicious on why this employee went there.\r\n\r\n4.5.2. Most days. Unidentified place.\r\nOn most days, 101, 106 & 107 will meetup at an unidentified location opposite brews been served.\r\n\r\n4.5.3. Day 10, Unidentified place\r\nOn day 10, CarID 24 stops at an identified place between Frank Fuel, Abila Scrap and Kronos Mart.\r\n\r\n4.5.4. Day 10, House at Carnero Street.\r\nOn day 10, 1,2,5,6,7,8,9,11,14,18,19,25,26,33 visited or pass by the house which is normally frequented by 2,3 & 11.\r\n\r\n4.5.5. Day 13 & 14. House at Barwyn Street\r\nNormally this house is frquented by 4 & 35. However on day 13 & 14, CarID 21 went to or pass by the house.\r\n\r\n4.5.6. Most days. Frydo’s Autosupply n More.\r\nOn most days, CarID 13, 15, 16 & 21 will pass by Frydo’s Autosupply n More. However, only CarID 13 have business there.\r\n\r\nAnalysing the network analysis, we can see that all of them do not have close relationship with one another.\r\n\r\n4.5.7. Day 18. Kronos Mart\r\nOn Day 18, CarID 5 stop at Kronos Mart but did not purchase anything.\r\n\r\n\r\n4.5.8. Day 17. Chostus Hotel.\r\nThree CarIDs (7,31,33) visited Chostus Hotel. However, only one (33) book the hotel.\r\n\r\n\r\nAll three do not have any indication of close relationship.\r\n\r\n4.5.9. Day 8, Near Max Iron and Steel.\r\nTruck 107 stop at an unidentified area near Max Iron and Steel.\r\n\r\n4.5.10. Day 16. Near Kronos Mart.\r\nCar 21 and 24 stop in between Frank Fuel, Abila Scrap and Kronos Mart to meet.\r\n There is no indication that both cars have close relationship.\r\n\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2021-07-28T21:32:00+08:00",
+    "input_file": "vast-challenge-assignment-part-6.knit.md"
   }
 ]
