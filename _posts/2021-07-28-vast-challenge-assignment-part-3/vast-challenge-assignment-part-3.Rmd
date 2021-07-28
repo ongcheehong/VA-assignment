@@ -42,6 +42,34 @@ loyalty <- read_csv("data/mc2/loyalty_data.csv",locale = locale(encoding = "ASCI
 ```
 
 ```{r}
+cc$last4ccnum <- as.factor(cc$last4ccnum)
+loyalty$loyaltynum <- as.factor(loyalty$loyaltynum)
+```
+
+```{r}
+cc$timestamp <- date_time_parse(cc$timestamp,
+                                 zone = "",
+                                 format = "%m/%d/%Y %H:%M")
+
+loyalty$timestamp <- date_parse(loyalty$timestamp,
+                                 format = "%m/%d/%Y")
+
+```
+
+```{r}
+cc_dtsplit <- cc %>%
+  mutate(day = date_weekday_factor(cc$timestamp), date =  as_date(cc$timestamp), time = format(cc$timestamp, format = "%H:%M"))
+
+cc_dtsplit
+
+```
+
+```{r}
+loyalty_dt <- rename(loyalty, date = timestamp)
+
+```
+
+```{r}
 car$CarID = as.factor(car$CarID)
 gps$id = as.factor(gps$id)
 
@@ -62,3 +90,250 @@ gps_cleaned$Timestamp <- date_time_parse(gps_cleaned$Timestamp,
 
 ```
 
+```{r}
+cc_dtsplit_bar <- cc_dtsplit %>%
+  count(location) %>%
+  mutate(location = fct_reorder(location, n, .desc =TRUE)) %>%
+  plot_ly(x = ~location, y = ~n, marker = list(color = ~n)) %>%
+  add_bars() %>%
+  layout(title = "Total number of visitation by location", xaxis = list(title = ""),yaxis = list(title = "Number of visitors"))
+
+cc_dtsplit_bar
+```
+
+```{r}
+loyalty_dt_bar <- loyalty_dt %>%
+  count(location) %>%
+  mutate(location = fct_reorder(location, n, .desc =TRUE)) %>%
+  plot_ly(x = ~location, y = ~n, marker = list(color = ~n)) %>%
+  add_bars() %>%
+  layout(title = "Total number of visitation by ", xaxis = list(title = ""),yaxis = list(title = "Number of visitors"))
+
+loyalty_dt_bar
+```
+
+```{r}
+cc_loyalty_join <- cc_dtsplit %>%
+  inner_join(loyalty_dt, by = c("date","location", "price"))
+
+cc_loyalty_join
+```
+
+### 4.2.	Add the vehicle data to your analysis of the credit and loyalty card data. How does your assessment of the anomalies in question 1 change based on this new data? What discrepancies between vehicle, credit, and loyalty card data do you find? Please limit your answer to 8 images and 500 words.
+
+
+
+We will examine the two vehicle related data. Gps and car-assignments data.
+
+The car-assignment data with a total of 44 rows consists of the name and appointment of the employee tag to a CarID. 
+
+The GPS data with a total of 685169 rows consists of the id of the car and its movement based on latitude and longitude with timestamp.
+
+
+```{r}
+glimpse(car_unite)
+glimpse(gps_cleaned)
+```
+
+
+In order for us to match the car assignment person to the gps data. We will inner join the data.
+
+Notice that there is only a total of 613077 dataset. This shows that some of the vehicles recorded are not part of the car_assignment data. I.e. vehicles apart from the car assignees has been tracked too. This phenomena wil be explained in the next section.
+
+
+```{r}
+
+
+gps_car <- gps_cleaned %>%
+  inner_join(car_unite, by = "CarID") 
+
+
+gps_car
+
+```
+
+The car_unite dataset which consists of car assigned to GASTech employees and also truck drivers which have no CarID.
+
+
+```{r}
+car_unite
+
+```
+Comparing the above car_unite DT table with the below gps_cleaned table, you will observe that there are vehicle IDs of 101-107. Those are assume to be trucks.
+
+
+```{r}
+gps_cleaned
+
+```
+
+
+If we look at the above data, we can see that during one minute, the gps data varies a lot. This tell us that during one minute, the car moves around quite a fair bit.
+
+
+Next, we will anti join both the car and gps datasets to sieve out those vehicle movement that are not part of the car assignees data.
+
+The below dataset will clearly show those CarID of 101-107 which are assume to be trucks.
+
+Going back to the background of this assignment. We will observe that GAStech do provide trucks for official business use. As such, we will assume that those vehicle with CarID of 101 to 107 are trucks. 
+
+These trucks will later be used for examination to see if they were used for personal used.
+
+```{r}
+gps_car_anti <- gps_cleaned %>%
+  anti_join(car_unite, by = "CarID")
+
+gps_car_anti
+```
+
+
+We will revisit the cc_loyalty dataset
+
+
+```{r}
+cc_loyalty_join %>%
+  arrange(timestamp)
+```
+
+
+If we take a look at both the joined dataset of gps_car and cc_loyalty_join data, we will observe that the gps_car data starts at 2014-01-06, 06:28 while the cc_loyalty_join starts at 2014_01_06, 07:28. A difference of an hour. We will observe the 1 hr difference in the later part of our study.
+
+
+
+```{r}
+tail(gps_car,6)
+
+
+```
+
+Next, we will take a look at the last few rows of both joined dataset. We will see that the gps data ends at 2014-01-19, 20:56:00 while the cc_loyalty data stops at 2014-01-19, 20:51:00. There is a difference of 6 mins.
+
+
+```{r}
+tail(cc_loyalty_join, 6)
+
+```
+
+Now, we will filter out those data before 2014-01-06 07:28:00 to take a look at the CarID. First will filter out those data that are before 07:00:00 so that when we plot the bar chart later, it will be visible
+
+
+```{r}
+gps_car_filter <- gps_car %>%
+  filter(Timestamp < "2014-01-06 07:00:00")
+
+gps_car_filter
+```
+
+First, we will group the data by TimeStamp and CarID.
+
+
+```{r}
+gps_car_group <- gps_car_filter %>%
+  group_by(Timestamp, CarID) %>%
+  summarize(count = n()) %>%
+  ungroup() 
+```
+
+Based on the bar chart below, there are 4 CarIDs recorded before 2014-01-06, 07:00:00. The 4 CarIDs are 4,10,19,35 with higher movements from 4 and 35.
+
+```{r}
+gps_car_group %>%
+  plot_ly(x = ~Timestamp, y = ~count, color = ~CarID, hoverinfo = "text",
+          text = ~paste("CarID:", CarID, "<br>","Timestamp:", Timestamp, "<br>", "Count:", count)) %>%
+  add_bars %>%
+  layout(xaxis = list(title  = ""))
+
+```
+
+Next, we will filter out 07:00:00 - 07:12:00.
+```{r}
+gps_car_filter2 <- gps_car %>%
+  filter(Timestamp > "2014-01-06 07:00:00" & Timestamp <= "2014-01-06 07:12:00")
+
+gps_car_filter2
+```
+
+
+```{r}
+gps_car_group2 <- gps_car_filter2 %>%
+  group_by(Timestamp, CarID) %>%
+  summarize(count = n()) %>%
+  ungroup() 
+```
+
+From 07:05:00 to 07:12:00, we can see that 35 has been moving about a lot, together with the earlier recorded movement. 35 who is an executive of GASTEch moves the most. Followed by 7 and 10 which has high amount of movement per minute but only travelled for around 5 mins.
+
+```{r}
+gps_car_group2 %>%
+  plot_ly(x = ~Timestamp, y = ~count, color = ~CarID, hoverinfo = "text",
+          text = ~paste("CarID:", CarID, "<br>","Timestamp:", Timestamp, "<br>", "Count:", count)) %>%
+  add_bars %>%
+  layout(xaxis = list(title  = ""))
+
+
+```
+
+Next, we will filter for 07:12:00 to 07:28:00
+
+
+```{r}
+gps_car_filter3 <- gps_car %>%
+  filter(Timestamp > "2014-01-06 07:12:00" & Timestamp < "2014-01-06 07:28:00")
+
+gps_car_filter3
+```
+
+
+
+```{r}
+gps_car_group3 <- gps_car_filter3 %>%
+  group_by(Timestamp, CarID) %>%
+  summarize(count = n()) %>%
+  ungroup() 
+```
+Similar as before, 35 is still moving about out till 07:27:00 with the highest movement count per minute. 
+
+```{r}
+gps_car_group3 %>%
+  plot_ly(x = ~Timestamp, y = ~count, color = ~as.factor(CarID), hoverinfo = "text",
+          text = ~paste("CarID:", CarID, "<br>","Timestamp:", Timestamp, "<br>", "Count:", count)) %>%
+  add_bars %>%
+  layout(xaxis = list(title  = ""))
+
+
+```
+
+Next, we will examine the last 6 min of the gps dataset
+
+
+```{r}
+gps_car_filter4 <- gps_car %>%
+  filter(Timestamp > "2014-01-19 20:51:00")
+gps_car_filter4
+```
+
+We will see that CarID 30 is the last recorded before the data ceased recording. CarID 30 belongs to the GASTech security manager. 
+
+
+```{r}
+gps_car_group4 <- gps_car_filter4 %>%
+  group_by(Timestamp, CarID) %>%
+  summarize(count = n()) %>%
+  ungroup() 
+
+gps_car_group4
+```
+
+
+```{r}
+cc_gps <- cc_loyalty_join %>%
+  inner_join(gps_car, by = c("timestamp" = "Timestamp"))
+
+cc_gps
+
+```
+
+Notice that when we joined both dataset, we can find several discrepancies in the data, First, at each moment the last4ccnum and loyaltynum is the same. However, the CarID is different. The reason to this is because we simply join the vehicle and purchases dataset by the time stamp. This is wrong as there might be occasion where at the same moment, one person could be moving about but not purchasing anything while the other could be at a shop buying stuff.
+
+
+To resolve this discrepancies. We will need to make use of the map data to find out the actual places based on the lat long data provided. Thus, we will proceed to Question 3.
