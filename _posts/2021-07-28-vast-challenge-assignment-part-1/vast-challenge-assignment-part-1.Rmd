@@ -1,7 +1,7 @@
 ---
 title: "Vast Challenge Assignment Part 1"
 description: |
-  A short description of the post.
+  A Welcome to Ong Chee Hong's Vast Challenge 2021 Assignment.
 author:
   - name: Ong Chee Hong
     url: https://www.linkedin.com/in/alexongch/
