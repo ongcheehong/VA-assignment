@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       warning = FALSE)
 ```
 
-# Data Preparation for Question 4.2
+# Data Preparation for Question 4.3
 
 ```{r}
 packages = c('DT','ggiraph','plotly','tidyverse', 'raster','sf','clock','tmap',
@@ -121,7 +121,7 @@ cc_loyalty_join
 ```
 
 
-### 4.3. Can you infer the owners of each credit card and loyalty card? What is your evidence? Where are there uncertainties in your method? Where are there uncertainties in the data? Please limit your answer to 8 images and 500 words.
+# 4.3. Can you infer the owners of each credit card and loyalty card? What is your evidence? Where are there uncertainties in your method? Where are there uncertainties in the data? Please limit your answer to 8 images and 500 words.
 
 To infer the cc and loyalty card data to the CarID, we will need to use the movement data using the geospatial data that was provided. We will first take a look at the tourist map in jpg form. Notice that there are some locations that were provided in the cc and loyalty dataset but not detectable in the tourist map. As such, there are some discrepancies in the map given. 
 
@@ -330,4 +330,6 @@ car_cc$loyaltynum <- as.factor(car_cc$loyaltynum)
 
 car_cc
 ```
+
+
 
