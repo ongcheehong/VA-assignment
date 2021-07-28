@@ -1,10 +1,10 @@
 ---
 title: "Vast Challenge Assignment Part 4"
 description: |
-  A short description of the post.
+  Welcome to Ong Chee Hong's Vast Challenge 2021 Assignment.
 author:
-  - name: Nora Jones
-    url: https://example.com/norajones
+  - name: Ong Chee Hong
+    url: https://www.linkedin.com/in/alexongch/
 date: 07-28-2021
 output:
   distill::distill_article:
@@ -13,11 +13,33 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = TRUE,
+                      fig.retina = 3,
+                      message = FALSE,
+                      warning = FALSE)
 ```
 
-Distill is a publication format for scientific and technical writing, native to the web.
+# Data Preparation for Question 4.2
 
-Learn more about using Distill at <https://rstudio.github.io/distill>.
+```{r}
+packages = c('DT','ggiraph','plotly','tidyverse', 'raster','sf','clock','tmap',
+             'rgdal','dplyr', 'tidyr', 'textclean', "plotly", "forcats", "jpeg", "tiff",
+             "mapview","tidygraph","igraph","ggraph","visNetwork","lubridate")
+for(p in packages){
+  if(!require(p,character.only = T)){
+    install.packages(p)
+  }
+  library(p,character.only = T)
+}
+```
+
+```{r}
+car <- read_csv("data/mc2/car-assignments.csv")
+cc <- read_csv("data/mc2/cc_data.csv", locale = locale(encoding = "ASCII"))
+gps <- read_csv("data/mc2/gps.csv")
+loyalty <- read_csv("data/mc2/loyalty_data.csv",locale = locale(encoding = "ASCII"))
+```
 
 
