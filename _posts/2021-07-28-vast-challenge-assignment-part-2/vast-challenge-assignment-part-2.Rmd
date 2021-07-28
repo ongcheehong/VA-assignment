@@ -218,4 +218,226 @@ cc_timeseries <- cc_loyalty_top %>%
 cc_timeseries
 ```
 
+Next, we will analyse the highest frequented location based on day and time. To do that, we will need to use this unite to combine both day and time together and group the, by location and daytime.
 
+```{r}
+cc_loyalty_day <- cc_loyalty_join %>%
+  unite(col = "daytime", day,time, sep = " ",  remove =FALSE) %>%
+  group_by(location, daytime) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+cc_loyalty_day
+```
+
+Next, a bar chart is plotted by filtering out those with more than or equal to 5. From the bar chart, we are able to see that Bean there done that has the highest visitations at a point of time, this is similar to the analysis we did before. The highest is 11 counts on Mon, 12:00H, next is Fri, 12:00H with 11 counts. The nect highest visited location at a point of time is Jack's Magical Beans which clock 7 counts on Mon, 12:00H, followed by Thu, 12:00H of 6 counts.
+
+
+```{r}
+cc_day <- cc_loyalty_day %>%
+  filter(count >=5) %>%
+  plot_ly(x = ~daytime, y = ~count, color = ~location, hoverinfo = "text", text = ~paste("Location:", location, "<br>","Day Time:", daytime, "<br>", "No.of visitors:", count)) %>%
+  add_bars() %>%
+  layout (title = "Total counts of visitors by day and time", xaxis = list(title = "", size = 3, dtick = ~daytime), yaxis = list(title = "Number of visitors") )
+
+cc_day
+
+```
+
+Having completed some EDA by inner joining both cc and loyalty dataset. We will sieve out those dataset that were in cc but not in loyalty. The method to do this is by using anti-join. Anti-join will take out those dataset that does not belongs to the secondary dataset but in the main dataset.
+
+This method is similar to full join therafter sieving those NA values.
+
+From the anti-joined data below, we are able to see that there are 409 rows that were in cc but not in loyalty. This form an anomaly that cc were used in the purchases but not the loyalty card. 
+
+
+```{r}
+cc_loyalty_antijoin <- cc_dtsplit %>%
+  anti_join(loyalty_dt, by = c("date","location", "price"))
+
+
+cc_loyalty_antijoin
+```
+
+Next, we will create a basic bar chart based on the anti join dataset.
+
+Based on the bar chart below, we can see that similar to the inner join dataset, the four locations are Katerina's Cafe, Hippokampos, Brew's been served and Guy's Gyros with the highest count of 59 clock at Katerina's Cafe.
+
+One major difference between this anti joined dataset versus the inner joined is that the descending gradient for each restaurant is not as steep as the inner joined. In the inner joined dataset, the 4th highest visited location is almost 2x the 5th highest visited location. As for the below chart, we can see that the decrement is not that steep.
+
+
+```{r}
+cc_anti <- cc_loyalty_antijoin %>%
+  count(location) %>%
+  mutate(location = fct_reorder(location, n, .desc =TRUE)) %>%
+  plot_ly(x = ~location, y = ~n, marker = list(color = ~n)) %>%
+  add_bars(name = "anti-join") %>%
+  layout(title = "Total number of visitation by area", xaxis = list(title = "", automargin = TRUE),yaxis = list(title = "Number of visitors", automargin = TRUE))
+
+cc_anti
+```
+
+Next, we will group the anti joined dataset to extract the number of visitations at a point of time. Based on the raw grouped data below, we can see that the count of visitations is quite linear with no high variations observed.
+
+
+```{r}
+cc_loyalty_anti_group <- cc_loyalty_antijoin %>%
+  group_by(location, day, date, time) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count)) %>%
+  ungroup()
+
+cc_loyalty_anti_group
+```
+
+Using the group data, we will create a time-series chart to see the trend throughout the duration of study. We will output those data with count of more than or equal to 2.
+
+Based on the chart below, we can observe that Bean there done that and Jack's Magical Beans at one point has the highest visitations of 3 transactions. The rest of the location are quite constant with 2 transactions.
+
+```{r}
+ cc_anti_timeseries <- cc_loyalty_anti_group %>%
+  filter(count >= 2) %>%
+  plot_ly(x = ~date, y =~count, color = ~location, hoverinfo = "text",
+          text = ~paste("Location:", location, "<br>","Date:", date, "<br>","Time:", time, "<br>", "Day:", day)) %>%
+  add_lines() %>%
+  add_markers(showlegend = FALSE) %>%
+  layout(title = "Most frequented places by groups of people", xaxis = list(title = "", dtick = ~date, showgrid = FALSE), yaxis = list(title = "Number of people"))
+
+cc_anti_timeseries
+```
+
+
+Similar to the above inner joined dataset, we will create a daytime column to observe which daytime has the highest count.
+
+```{r}
+cc_loyalty_day_anti <- cc_loyalty_antijoin %>%
+  unite(col = "daytime", day,time, sep = " ",  remove =FALSE) %>%
+  group_by(location, daytime) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+cc_loyalty_day_anti
+```
+
+Based on the chart below, we can see that the highest count per daytime is 5 counts of visitors at Bean there done that which was clocked on Tue, 12:00pm followed by Jack's Magical bean of 4 counts on the same day.  
+
+```{r}
+cc_anti_day <- cc_loyalty_day_anti %>%
+  filter(count >=3) %>%
+  plot_ly(x = ~daytime, y = ~count, color = ~location, hoverinfo = "text", text = ~paste("Location:", location, "<br>","Day Time:", daytime, "<br>", "No.of visitors:", count)) %>%
+  add_bars() %>%
+  layout (title = "Total counts of visitors by day and time", xaxis = list(title = "", size = 3, dtick = ~daytime), automargin = TRUE, yaxis = list(title = "Number of visitors"))
+
+cc_anti_day
+
+```
+
+Next, we will anti join from loyalty to cc.
+
+Based on the anti-joined data, we observe that there are 311 rows of transaction which uses loyalty card with no credit card.
+
+```{r}
+cc_loyalty_antijoin_right <- loyalty_dt%>%
+  anti_join(cc_dtsplit, by = c("date","location", "price")) %>%
+  ungroup()
+
+cc_loyalty_antijoin_right
+
+```
+
+Notice that there is no day after the anti join was performed this is due to the fact that originally, the loyalty_dt dataset does not have the day included. As such, day is being created using the date_weekday_factor function.
+
+
+```{r}
+cc_loyalty_antijoin_mutate <- cc_loyalty_antijoin_right %>%
+  mutate(day = date_weekday_factor(cc_loyalty_antijoin_right$date))
+cc_loyalty_antijoin_mutate
+
+```
+
+Similar to the previous inner join and left anti join data. The four highest visited locations are Katerina's Cafe, Hippokampos, Brew's been served and Guy's Gyros. 
+
+Katerina's Cafe and Hippokampos lead the two most visited location of 42 and 40 respectively.
+
+
+```{r}
+cc_anti_right <- cc_loyalty_antijoin_mutate %>%
+  count(location) %>%
+  mutate(location = fct_reorder(location, n, .desc =TRUE)) %>%
+  plot_ly(x = ~location, y = ~n, marker = list(color = ~n)) %>%
+  add_bars(name = "anti-join-right") %>%
+  layout(title = "Total number of visitation by area", xaxis = list(title = "", automargin = TRUE),yaxis = list(title = "Number of visitors", automargin = TRUE))
+
+cc_anti_right
+```
+
+Next, we will group the right anti joined dataset to get the count per day based on location. 
+
+From the below chart, we can see that Hallowed Grounds have the highest count of 6 visitations on 2014-01-09.
+
+
+```{r}
+cc_loyalty_day_anti_right <- cc_loyalty_antijoin_mutate %>%
+  group_by(location, date,day) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count)) %>%
+  ungroup()
+
+cc_loyalty_day_anti_right
+```
+
+Next, we will created a bar chart to analyse those visitations of more than or equal to 4 counts. Based on the chart below, we can see that although Hallowed Grounds has the highest visitation at one point, however, it only clock once. This is also considered another anomaly as the count of visitations is not consistent in the dataset provided.
+
+The next highest count of 5 visitations were clocked by Guys's Gyros on 2014-01-15, Hippokampos on 2014-01-10, Katerina's Cafe and Brew's been served on three different occasions.
+
+
+```{r}
+cc_anti_day_right <- cc_loyalty_day_anti_right %>%
+  unite(col = "daydate", day, date, sep = " ", remove = FALSE) %>%
+  filter(count >=4) %>%
+  plot_ly(x = ~daydate, y = ~count, color = ~location, hoverinfo = "text", text = ~paste("Location:", location, "<br>","DayDate:", daydate, "<br>", "No.of visitors:", count)) %>%
+  add_bars() %>%
+  layout (title = "Total counts of visitors by date", xaxis = list(title = "", size = 3, dtick = ~daydate), automargin = TRUE, yaxis = list(title = "Number of visitors"))
+
+cc_anti_day_right
+
+```
+
+Next, we will created a time-series chart to see the trends of visitations to the respective locations.
+
+One more peculiar occurrence can be discovered from the chart below. Brew's Been Served has 5 transactions consecutively for 3 days. However, after which no visits were recorded of Brew've been served for right anti join of more than or equal to 4 transactions.
+
+
+
+```{r}
+ cc_anti_timeseries_right <- cc_loyalty_day_anti_right %>%
+  filter(count >= 4) %>%
+  plot_ly(x = ~date, y =~count, color = ~location, hoverinfo = "text",
+          text = ~paste("Location:", location, "<br>","Date:", date, "<br>", "<br>", "Day:", day)) %>%
+  add_lines() %>%
+  add_markers(showlegend = FALSE) %>%
+  layout(title = "Most frequented places by groups of people", xaxis = list(title = "", dtick = ~date, showgrid = FALSE), yaxis = list(title = "Number of people"))
+
+cc_anti_timeseries_right
+```
+
+Next, we will create a facet grid of all the three joined dataset to analyse everything at one go. To create a facet grid, we will use the subplot function based on the plotly package to create three chart side by side for analysis.
+
+
+
+
+```{r}
+subplot(cc_join, cc_anti, cc_anti_right, nrows = 1, shareX = TRUE, shareY = TRUE)
+
+```
+
+Lastly, we will the cc_loyalty_join dataset with itself by "last4ccnum","location","price", "time", "date" and filter by different loyaltynum. The cc_loyalty dataset is the initial inner join dataset.
+
+Based on the below tibble. We can see that there are 12 instances where there are 6 cc users using different loyaltynum. This is another anomaly that has been found.
+
+
+```{r}
+cc_loyalty_join %>% 
+  inner_join(cc_loyalty_join, by = c("last4ccnum", "location", "price","time", "date")) %>%
+  filter(loyaltynum.x != loyaltynum.y)
+```
