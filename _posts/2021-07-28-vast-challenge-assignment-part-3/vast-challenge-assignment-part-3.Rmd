@@ -119,7 +119,7 @@ cc_loyalty_join <- cc_dtsplit %>%
 cc_loyalty_join
 ```
 
-### 4.2.	Add the vehicle data to your analysis of the credit and loyalty card data. How does your assessment of the anomalies in question 1 change based on this new data? What discrepancies between vehicle, credit, and loyalty card data do you find? Please limit your answer to 8 images and 500 words.
+# 4.2.	Add the vehicle data to your analysis of the credit and loyalty card data. How does your assessment of the anomalies in question 1 change based on this new data? What discrepancies between vehicle, credit, and loyalty card data do you find? Please limit your answer to 8 images and 500 words.
 
 
 
@@ -246,6 +246,8 @@ gps_car_group %>%
 ```
 
 Next, we will filter out 07:00:00 - 07:12:00.
+
+
 ```{r}
 gps_car_filter2 <- gps_car %>%
   filter(Timestamp > "2014-01-06 07:00:00" & Timestamp <= "2014-01-06 07:12:00")
