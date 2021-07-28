@@ -27,6 +27,7 @@ As a visual analytics expert assisting law enforcement, your mission is to ident
 
 
 # Questions
+
 1.	Using just the credit and loyalty card data, identify the most popular locations, and when they are popular. What anomalies do you see? What corrections would you recommend to correct these anomalies? Please limit your answer to 8 images and 300 words.
 
 2.	Add the vehicle data to your analysis of the credit and loyalty card data. How does your assessment of the anomalies in question 1 change based on this new data? What discrepancies between vehicle, credit, and loyalty card data do you find? Please limit your answer to 8 images and 500 words.
@@ -49,8 +50,6 @@ To address the questions above, below is the required scope of work
 3. Methodology and visualisation
 
 4. Answers
-
-5. Acknowledgment
 
 
 # 1. Literature Review
