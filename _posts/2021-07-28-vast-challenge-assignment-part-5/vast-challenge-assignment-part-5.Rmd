@@ -121,6 +121,23 @@ cc_loyalty_join
 ```
 
 ```{r}
+cc_loyalty_antijoin <- cc_dtsplit %>%
+  anti_join(loyalty_dt, by = c("date","location", "price"))
+
+
+cc_loyalty_antijoin
+```
+
+```{r}
+cc_loyalty_antijoin_right <- loyalty_dt%>%
+  anti_join(cc_dtsplit, by = c("date","location", "price")) %>%
+  ungroup()
+
+cc_loyalty_antijoin_right
+
+```
+
+```{r}
 car_cc <- data.frame("CarID" = c(1,1,1,2,3,4,4,5,5,6,7,8,8,9,10,10,11,12,13,13,13,14,14,14,15,15,16,16,17,18,18,18,18,19,21,22,22,
                                  25,25,25,26,26,27,29,29,29,30,30,30,30,31,33,34,35,101,101,104,105,106,106,107),"last4ccnum" = c(7108,9551,2681,1415,9635,8156,7688,6899,7117,7253,2540,5368,5368,1877,8332,8332,1321,7108,5407,8202,6691,7889,7889,1874,3853,8129,4795,4795,
   7384,9617,7354,4434,7792,6895,9405,1286,1286,6816,2418,2142,7819,1310,3492, 3547,5921,5921,8411,4948,4948,6901,5010,9683,3484,2463,9220,9220,8642,9152,2276,3506,4530), "loyaltynum" = c("L6544","L5777","L1107","L7783","L3191","L5224","L4164", "L6267","L6417","L1682","L5947", "L2247","L6119","L3014","L2070","L8566","L4149","L6544","L4034","L2343","L6267","L6119","L2247","L4424","L1485","L8328","L8566","L2070","L3800","L5553","L9254","L2169","L5756","L3366","L3259","L3288","L3572","L8148","L9018","L9637","L5259","L8012","L7814","L9362","L3295","L9406","L6110","L9406","L3295","L9363","L2459","L7291","L2490","L6886","L4063","L7761","L2769","L5485","L3317","L7761","L8477"))
@@ -373,6 +390,278 @@ ungroup()
 ```
 
 Next, we will create the visNetwork network analysis. Notice that the visNetwork is interactive whereby the CarID can be chosen to see the relationship between each CarID.
+
+
+```{r}
+visNetwork(car_nodes_rename,
+car_location_edges_aggregated_vis) %>%
+visIgraphLayout(layout =
+"layout_with_fr"
+) %>%
+visOptions(highlightNearest =
+TRUE
+,
+nodesIdSelection =
+TRUE
+) %>%
+visLegend() %>%
+visLayout(randomSeed =
+123
+)
+```
+
+Next, we will repeat the step for cc-loyalty left antijoin.
+
+
+```{r}
+cc_loyalty_antijoin
+
+```
+
+We will left join the cc_loyalty_antijoin to car_cc data.
+
+
+```{r}
+car_cc_anti_left <- cc_loyalty_antijoin %>%
+  left_join(car_cc, by = c("last4ccnum"))
+  
+  
+car_cc_anti_left
+```
+
+Next, we will break the timestamp by 5mins.
+
+
+```{r}
+cc_anti_left_5min <- car_cc_anti_left %>%
+  mutate(time_5 = cut(timestamp, breaks="5 min"))
+
+cc_anti_left_5min
+
+```
+
+Next, we will inner join
+the carid_cc data to the car assignment dataset to get the names for each CarID.
+
+```{r}
+cc_anti_left_5min$CarID <- as.factor(cc_anti_left_5min$CarID)
+
+car_cc_anti_left <- cc_anti_left_5min %>%
+  inner_join(car_unite_select, by = c("CarID"))
+
+car_cc_anti_left
+
+```
+
+
+Select out those columns required
+
+
+```{r}
+cc_anti_left_5min_select <- car_cc_anti_left %>%
+  select(CarID,time_5,location,name,day)
+
+cc_anti_left_5min_select
+
+```
+
+Join both dataset together to find relationship between personnel.
+
+
+```{r}
+car_location_anti_left_edges <- cc_anti_left_5min_select %>%
+  inner_join(cc_anti_left_5min_select, by = c("time_5","location","day"), suffix = c("_1","_2"))
+
+car_location_anti_left_edges
+
+
+```
+
+Remove those rows with same CarID.
+
+
+```{r}
+car_location_anti_left_edges_aggregated <- car_location_anti_left_edges %>%
+  group_by(CarID_1, CarID_2, time_5, location, day) %>%
+  summarise(Weight = n()) %>%
+  filter(CarID_1 != CarID_2, Weight > 1) %>%
+  ungroup()
+
+
+car_location_anti_left_edges_aggregated
+
+
+```
+
+Examine those data with na carids which are trucks data.
+
+
+```{r}
+car_location_anti_left_edges %>%
+  filter(is.na(CarID_1))
+
+```
+
+
+Prepare for visNetwork network analysis.
+
+
+```{r}
+car_location_anti_left_edges_aggregated_vis <- car_location_anti_left_edges %>%
+left_join(car_nodes_rename, by = c("name_1"="name")) %>%
+rename(from = id) %>%
+left_join(car_nodes_rename, by = c("name_2"="name")) %>%
+rename(to = id) %>%
+  drop_na(from,to) %>%
+group_by(from,to) %>%
+summarise(weight = n()) %>%
+filter(weight >1) %>%
+ungroup()
+```
+
+Network analysis for anti left join cc to loyalty dataset
+
+
+```{r}
+visNetwork(car_nodes_rename,
+car_location_anti_left_edges_aggregated_vis ) %>%
+visIgraphLayout(layout =
+"layout_with_fr"
+) %>%
+visOptions(highlightNearest =
+TRUE
+,
+nodesIdSelection =
+TRUE
+) %>%
+visLegend() %>%
+visLayout(randomSeed =
+123
+)
+```
+We will do the same for right join loyalty to cc dataset.
+
+
+```{r}
+car_cc_anti_right <- cc_loyalty_antijoin_right %>%
+  left_join(car_cc, by = c("loyaltynum"))
+  
+  
+car_cc_anti_right
+```
+
+Join car_cc to car assignment dataset.
+
+
+```{r}
+car_cc_anti_right$CarID <- as.factor(car_cc_anti_right$CarID)
+
+car_cc_anti_right <- car_cc_anti_right %>%
+  inner_join(car_unite_select, by = c("CarID"))
+
+
+car_cc_anti_right
+
+```
+
+Select out those required columns.
+
+
+```{r}
+cc_anti_right_select <- car_cc_anti_right %>%
+  select(CarID,location,name,date)
+
+cc_anti_right_select
+
+```
+
+Join car_cc dataset to itself to find relationship between personnel.
+
+
+```{r}
+car_location_anti_right_edges <- cc_anti_right_select %>%
+  inner_join(cc_anti_right_select, by = c("location","date"), suffix = c("_1","_2"))
+
+car_location_anti_right_edges
+
+
+```
+
+Gather those carids that have close relationship.
+
+
+```{r}
+car_location_anti_right_edges_aggregated <- car_location_anti_right_edges %>%
+  group_by(CarID_1, CarID_2, location, date) %>%
+  summarise(Weight = n()) %>%
+  filter(CarID_1 != CarID_2, Weight > 1) %>%
+  ungroup()
+
+
+car_location_anti_right_edges_aggregated
+
+
+```
+
+Preapre for visNetwork network analysis
+
+
+```{r}
+car_location_anti_right_edges_aggregated_vis <- car_location_anti_right_edges %>%
+left_join(car_nodes_rename, by = c("name_1"="name")) %>%
+rename(from = id) %>%
+left_join(car_nodes_rename, by = c("name_2"="name")) %>%
+rename(to = id) %>%
+   drop_na(from,to) %>%
+group_by(from,to) %>%
+summarise(weight = n()) %>%
+filter(weight >1) %>%
+ungroup()
+```
+
+Network analysis for left anti join loyalty to cc dataset.
+
+
+```{r}
+visNetwork(car_nodes_rename,
+car_location_anti_right_edges_aggregated_vis ) %>%
+visIgraphLayout(layout =
+"layout_with_fr"
+) %>%
+visOptions(highlightNearest =
+TRUE
+,
+nodesIdSelection =
+TRUE
+) %>%
+visLegend() %>%
+visLayout(randomSeed =
+123
+)
+```
+
+Network analysis for left anti join cc to loyalty dataset.
+
+
+```{r}
+visNetwork(car_nodes_rename,
+car_location_anti_left_edges_aggregated_vis ) %>%
+visIgraphLayout(layout =
+"layout_with_fr"
+) %>%
+visOptions(highlightNearest =
+TRUE
+,
+nodesIdSelection =
+TRUE
+) %>%
+visLegend() %>%
+visLayout(randomSeed =
+123
+)
+```
+
+Inner joined network analysis.
 
 
 ```{r}
