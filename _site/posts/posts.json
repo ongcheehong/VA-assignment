@@ -32,5 +32,22 @@
     "preview": {},
     "last_modified": "2021-07-28T20:41:02+08:00",
     "input_file": "vast-challenge-assignment-part-1.knit.md"
+  },
+  {
+    "path": "posts/2021-07-28-vast-challenge-assignment-part-2/",
+    "title": "Vast Challenge Assignment Part 2",
+    "description": "Welcome to Ong Chee Hong's Vast Challenge 2021 Assignment.",
+    "author": [
+      {
+        "name": "Ong Chee Hong",
+        "url": "https://www.linkedin.com/in/alexongch/"
+      }
+    ],
+    "date": "2021-07-28",
+    "categories": [],
+    "contents": "\r\n\r\n\r\n\r\n",
+    "preview": {},
+    "last_modified": "2021-07-28T20:42:25+08:00",
+    "input_file": "vast-challenge-assignment-part-2.knit.md"
   }
 ]
